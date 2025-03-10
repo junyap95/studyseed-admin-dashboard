@@ -1,16 +1,20 @@
 "use client";
-// import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { adminSchema } from "@/lib/adminSchema";
-
+import { Alert, Box, Button, Stack, TextField } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 export default function Login() {
-  //   const router = useRouter();
+  const router = useRouter();
+  const { setIsAuthenticated } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    setError,
+    setFocus,
+    formState: { errors, isValid, isSubmitting },
   } = useForm({
     resolver: zodResolver(adminSchema),
   });
@@ -28,42 +32,61 @@ export default function Login() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error:", errorData.error);
-        // Handle error accordingly
+        setError("root", {
+          type: "manual",
+          message: `${errorData.error}`,
+        });
+        setFocus("email");
       } else {
         const result = await response.json();
         console.log("Success:", result.message);
-        // Handle success accordingly
+        setIsAuthenticated(true);
+        router.push("/create-user");
       }
     } catch (error) {
       console.error("Unexpected error:", error);
-      // Handle unexpected errors
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Login</h1>
+    <Box>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div>
-          <label>Username</label>
-          <input {...register("username")} />
-          {errors.username && <span>{errors.username.message}</span>}
-        </div>
+        <Stack gap={3}>
+          <Stack
+            gap={3}
+            sx={{
+              flexDirection: {
+                xs: "column",
+                md: "row",
+              },
+            }}
+          >
+            <TextField
+              {...register("email")}
+              label="Email"
+              variant="outlined"
+              error={!!errors.email}
+              sx={{ flex: 1 }}
+              helperText={errors.email && errors.email.message}
+              slotProps={{ htmlInput: { autoComplete: "off" } }}
+            />
 
-        <div>
-          <label>Email</label>
-          <input {...register("email")} />
-          {errors.email && <span>{errors.email.message}</span>}
-        </div>
-
-        <div>
-          <label>Password</label>
-          <input type="password" {...register("password")} />
-          {errors.password && <span>{errors.password.message}</span>}
-        </div>
-
-        <button type="submit">Submit</button>
+            <TextField
+              {...register("password")}
+              label="Password"
+              variant="outlined"
+              error={!!errors.password}
+              sx={{ flex: 1 }}
+              helperText={errors.password && errors.password.message}
+              slotProps={{ htmlInput: { autoComplete: "off" } }}
+            />
+          </Stack>
+          {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
+          <Button disabled={!isValid} variant="contained" type="submit" loading={isSubmitting}>
+            Sign In As Admin
+          </Button>
+        </Stack>
       </form>
-    </div>
+    </Box>
   );
 }

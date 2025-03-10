@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const adminUser = await Admin.findOne({ email: requestBody.email });
 
     if (!adminUser) {
-      return NextResponse.json({ error: "User does not exist!" }, { status: 404 });
+      return NextResponse.json({ error: "Admin with this email does not exist!" }, { status: 404 });
     }
 
     const passwordValidation = await bcryptjs.compare(requestBody.password, adminUser.password);

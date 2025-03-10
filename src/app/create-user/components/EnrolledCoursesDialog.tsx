@@ -10,9 +10,8 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { useController, useFormContext } from "react-hook-form";
-import { UserSchema } from "@/lib/adminSchema";
-import { useState } from "react";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
+import { ZodUserSchema } from "@/lib/adminSchema";
 
 const courses = ["GES", "GES2"] as const;
 
@@ -26,31 +25,20 @@ export default function EnrolledCoursesDialog({
   const {
     control,
     formState: { errors },
-  } = useFormContext<UserSchema>();
-  const { field } = useController({
-    control,
-    name: "enrolled_courses",
-  });
-  const [value, setValue] = useState(field.value || []);
+  } = useFormContext<ZodUserSchema>();
 
-  const handleCheckBoxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const course = e.target.value;
-    const valueCopy = [...value];
-    // update checkbox value
-    if (e.target.checked) {
-      valueCopy.push(course);
+  const { fields, append, remove } = useFieldArray({ control, name: "enrolled_courses" });
+  const fieldArray = useWatch({ control, name: "enrolled_courses" });
+
+  const handleCheckBoxChange = (course: string, checked: boolean) => {
+    if (checked) {
+      append({ course });
     } else {
-      const i = valueCopy.indexOf(course);
-      if (i > -1) {
-        valueCopy.splice(i, 1);
+      const index = fields.findIndex((field) => field.course === course);
+      if (index !== -1) {
+        remove(index);
       }
     }
-
-    // send data to react hook form
-    field.onChange(valueCopy);
-
-    // update local state
-    setValue(valueCopy);
   };
 
   return (
@@ -71,8 +59,8 @@ export default function EnrolledCoursesDialog({
                   control={
                     <Checkbox
                       value={course}
-                      checked={value.includes(course)}
-                      onChange={(e) => handleCheckBoxChange(e)}
+                      checked={fieldArray.some((field) => field.course === course)}
+                      onChange={(e) => handleCheckBoxChange(course, e.target.checked)}
                     />
                   }
                   label={course}

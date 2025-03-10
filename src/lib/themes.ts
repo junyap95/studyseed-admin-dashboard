@@ -11,7 +11,6 @@ export const lightTheme = createTheme({
         body: {
           background:
             "radial-gradient(circle, rgba(229, 229, 229, 1) 0%, rgba(103, 143, 201, 1) 75%)",
-          minHeight: "100vh",
         },
       },
     },

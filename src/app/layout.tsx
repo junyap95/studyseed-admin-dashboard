@@ -1,17 +1,13 @@
-"use client";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@mui/material/styles";
-import { lightTheme } from "@/lib/themes";
-import CssBaseline from "@mui/material/CssBaseline";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import { AuthProvider } from "@/context/AuthContext";
+import NavBar from "@/components/NavBar";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
+import { Toaster } from "sonner";
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
   subsets: ["latin"],
+  display: "swap",
 });
 
 export default function RootLayout({
@@ -20,13 +16,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider theme={lightTheme}>
-          <CssBaseline />
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
+    <AuthProvider>
+      <html lang="en">
+        <body className={`${inter.className}`}>
+          <AppRouterCacheProvider>
+            <NavBar />
+            {children}
+            <Toaster />
+          </AppRouterCacheProvider>
+        </body>
+      </html>
+    </AuthProvider>
   );
 }

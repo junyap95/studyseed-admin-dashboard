@@ -1,4 +1,4 @@
-import { userSchema } from "@/lib/adminSchema";
+import { ZodUserSchema, userSchema } from "@/lib/adminSchema";
 import { NextResponse } from "next/server";
 import { connectToMongoDB } from "@/lib/mongodb";
 import { parse } from "cookie";
@@ -18,12 +18,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const requestBody: IUser = await request.json();
+    const requestBody: ZodUserSchema = await request.json();
 
     const result = userSchema.safeParse(requestBody);
 
     if (!result.success) {
-      return NextResponse.json({ message: "Validation Error" }, { status: 400 });
+      return NextResponse.json({ message: "Validation Error", result }, { status: 400 });
     }
 
     const existingUser = (await User.findOne({ userid: requestBody.userid })) as IUser;
@@ -35,11 +35,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const newUser = new User(requestBody);
+    const updatedReqBody = {
+      ...requestBody,
+      enrolled_courses: requestBody.enrolled_courses.map((courseObj) => courseObj.course),
+    };
+
+    const newUser = new User(updatedReqBody);
     const savedResult = await newUser.save();
 
     const response = NextResponse.json(
-      { message: `User Created successful`, savedResult },
+      { message: `User Created successfully`, savedResult },
       { status: 201 }
     );
 
