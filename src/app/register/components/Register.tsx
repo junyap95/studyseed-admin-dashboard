@@ -30,14 +30,11 @@ export default function Register() {
         // Handle error accordingly
       } else {
         const result = await response.json();
-        console.log("Success:", result.message);
         setErrorMsg(result.message);
         return;
-        // Handle success accordingly
       }
     } catch (error) {
       console.error("Unexpected error:", error);
-      // Handle unexpected errors
     }
   };
 

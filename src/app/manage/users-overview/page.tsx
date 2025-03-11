@@ -4,10 +4,11 @@ import { ZodUserSchema } from "@/lib/adminSchema";
 import React, { useEffect, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import dynamic from "next/dynamic";
-import Loading from "../create-user/loading";
+
 import deepEqual from "deep-equal";
 import { Input } from "@/components/ui/input";
 import { Box } from "@mui/material";
+import Loading from "../components/loading";
 
 const UserTable = dynamic(() => import("@/components/UserTable"), {
   loading: () => <Loading />,
@@ -35,12 +36,9 @@ export default function UserOverview() {
       if (response.ok) {
         const resObj = await response.json();
         const { data } = resObj;
-        console.log(data, resObj);
         if (!deepEqual([...data?.allUsers], allUsers)) setAllUsers([...data?.allUsers]);
       }
     };
-
-    console.log(allUsers);
 
     getAllUsers();
   }, [allUsers, setAllUsers]);

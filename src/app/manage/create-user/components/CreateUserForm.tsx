@@ -15,7 +15,7 @@ import React, { SyntheticEvent, useState } from "react";
 import EnrolledCoursesDialog from "./EnrolledCoursesDialog";
 import { ZodUserSchema } from "@/lib/adminSchema";
 import { Courses } from "@/lib/types";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { generateRandomLetters, initializeProgress } from "@/lib/helperFunctions";
 import AddIcon from "@mui/icons-material/Add";
@@ -23,6 +23,7 @@ import { useLocalStorage } from "usehooks-ts";
 import BasicContainer from "@/components/BasicContainer";
 
 export default function CreateUserForm() {
+  const router = useRouter();
   const {
     reset,
     resetField,
@@ -90,7 +91,6 @@ export default function CreateUserForm() {
         return;
       }
 
-      console.log(responseData);
       if (responseData && responseData.savedResult) {
         const updatedUserArr = [...userArr, responseData.savedResult];
         setUserArr(updatedUserArr);

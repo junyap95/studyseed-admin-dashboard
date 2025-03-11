@@ -8,7 +8,6 @@ await connectToMongoDB();
 export async function POST(request: Request) {
   try {
     const requestBody: IAdmin = await request.json();
-    // console.log(requestBody);
 
     const emailExists = await Admin.findOne({ email: requestBody.email });
 

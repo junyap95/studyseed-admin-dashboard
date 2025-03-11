@@ -16,11 +16,7 @@ export async function GET(request: Request) {
 
   const allUsers = await User.find().sort({ _id: -1 }).lean();
 
-  const data = {
-    message: "Hello from the API!",
-    allUsers,
-    timestamp: new Date().toISOString(),
-  };
+  const data = { allUsers };
 
   return NextResponse.json({ data, user: decoded });
 }

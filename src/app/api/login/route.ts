@@ -1,27 +1,14 @@
-import { adminSchema } from "@/lib/adminSchema";
-import { Admin, IAdmin } from "@/Models/Admin";
+import { adminSchema, ZodAdminSchema } from "@/lib/adminSchema";
+import { Admin } from "@/Models/Admin";
 import { NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
 import { connectToMongoDB } from "@/lib/mongodb";
 import jwt from "jsonwebtoken";
 import { parse, serialize } from "cookie";
 
-// import clientPromise from "@/app/lib/mongodb";
-
-export async function GET(request: Request) {
-  const cookies = parse(request.headers.get("cookie") || "");
-  const token = cookies.authToken;
-
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-
-  const data = {
-    message: "Hello from the API!",
-    timestamp: new Date().toISOString(),
-  };
-
-  return NextResponse.json({ data, user: decoded });
+export interface LoginResponse {
+  message: string;
+  adminUser: ZodAdminSchema;
 }
 
 export async function POST(request: Request) {
@@ -37,15 +24,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "User already logged in", user: decoded });
     }
 
-    const requestBody: IAdmin = await request.json();
+    const requestBody: ZodAdminSchema = await request.json();
 
     const result = adminSchema.safeParse(requestBody);
 
-    if (!result.success) {
-      return NextResponse.json({ error: result }, { status: 400 });
-    }
+    if (!result.success) return NextResponse.json({ error: result }, { status: 400 });
 
-    const adminUser = await Admin.findOne({ email: requestBody.email });
+    const adminUser = (await Admin.findOne({ email: requestBody.email })) as ZodAdminSchema;
 
     if (!adminUser) {
       return NextResponse.json({ error: "Admin with this email does not exist!" }, { status: 404 });
@@ -62,7 +47,10 @@ export async function POST(request: Request) {
       expiresIn: "1h",
     });
 
-    const response = NextResponse.json({ message: `Login successful` }, { status: 201 });
+    const response = NextResponse.json(
+      { message: `Login successful`, adminUser } as LoginResponse,
+      { status: 201 }
+    );
 
     response.headers.set(
       "Set-Cookie",
