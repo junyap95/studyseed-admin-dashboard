@@ -27,7 +27,6 @@ export default function Register() {
         const errorData = await response.json();
         setErrorMsg(errorData.error);
         return;
-        // Handle error accordingly
       } else {
         const result = await response.json();
         setErrorMsg(result.message);
@@ -43,20 +42,20 @@ export default function Register() {
       <h1>Register</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label>Username</label>
-          <input {...register("username")} />
+          <label htmlFor="username">Username</label>
+          <input id="username" {...register("username")} />
           {errors.username && <span>{errors.username.message}</span>}
         </div>
 
         <div>
-          <label>Email</label>
-          <input {...register("email")} />
+          <label htmlFor="email">Email</label>
+          <input id="email" {...register("email")} />
           {errors.email && <span>{errors.email.message}</span>}
         </div>
 
         <div>
-          <label>Password</label>
-          <input type="password" {...register("password")} />
+          <label htmlFor="password">Password</label>
+          <input id="password" type="password" {...register("password")} />
           {errors.password && <span>{errors.password.message}</span>}
         </div>
 
