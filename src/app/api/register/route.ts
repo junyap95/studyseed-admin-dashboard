@@ -3,9 +3,8 @@ import bcryptjs from "bcryptjs";
 import { connectToMongoDB } from "@/lib/mongodb";
 import { IAdmin, Admin } from "@/Models/Admin";
 
-await connectToMongoDB();
-
 export async function POST(request: Request) {
+  await connectToMongoDB();
   try {
     const requestBody: IAdmin = await request.json();
 
@@ -34,6 +33,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error }, { status: 400 });
     }
   } catch (error) {
-    return NextResponse.json({ error }, { status: 400 });
+    return NextResponse.json({ error }, { status: 500 });
   }
 }

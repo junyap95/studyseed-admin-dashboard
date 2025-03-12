@@ -40,20 +40,17 @@ export default function Login() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error:", errorData.error);
         setError("root", {
           type: "manual",
           message: `${errorData.error}`,
         });
         setFocus("email");
-      } else {
-        const result: LoginResponse = await response.json();
-        console.log(result, "result??");
-        console.log(adminProfile, "a??");
-        if (!adminProfile) setAdminProfile(result?.adminUser);
-        setIsAuthenticated(true);
-        router.push("/");
+        return;
       }
+      const result: LoginResponse = await response.json();
+      if (!adminProfile) setAdminProfile(result?.adminUser);
+      setIsAuthenticated(true);
+      router.push("/");
     } catch (error) {
       console.error("Unexpected error:", error);
     }
@@ -91,7 +88,9 @@ export default function Login() {
             slotProps={{ htmlInput: { autoComplete: "off" } }}
           />
         </Stack>
-        {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
+
+        {errors.root?.message && <Alert role="alert">{errors?.root?.message}</Alert>}
+
         <Button disabled={!isValid} variant="contained" type="submit" loading={isSubmitting}>
           Sign In As Admin
         </Button>
