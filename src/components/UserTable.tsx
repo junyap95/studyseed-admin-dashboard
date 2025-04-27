@@ -34,7 +34,7 @@ export default function UserTable({ userArray, caption }: UserTableProps) {
       <TableCaption>
         {!!caption
           ? caption
-          : userArray.length > 0
+          : userArray?.length > 0
           ? "A list of recently added users"
           : "No users have been added yet"}
       </TableCaption>
@@ -49,7 +49,7 @@ export default function UserTable({ userArray, caption }: UserTableProps) {
       </TableHeader>
 
       <TableBody>
-        {userArray.map((user, index) => (
+        {userArray?.map((user, index) => (
           <TableRow key={`${index} - ${user}`}>
             <TableCell className="font-medium flex gap-2">
               <Copy
