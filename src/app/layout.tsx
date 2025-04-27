@@ -2,8 +2,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import NavBar from "@/components/NavBar";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Toaster } from "sonner";
+import Providers from "@/components/Providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,11 +19,11 @@ export default function RootLayout({
     <AuthProvider>
       <html lang="en">
         <body className={`${inter.className}`}>
-          <AppRouterCacheProvider>
+          <Providers>
             <NavBar />
             {children}
             <Toaster />
-          </AppRouterCacheProvider>
+          </Providers>
         </body>
       </html>
     </AuthProvider>
