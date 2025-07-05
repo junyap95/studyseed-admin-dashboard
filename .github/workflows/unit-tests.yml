@@ -1,15 +1,25 @@
-name: Unit Tests
-on: push
+name: Run Tests on PR
+
+on:
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  unit-tests:
+  test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+
       - name: Install dependencies
-        run: npm ci
-      - name: Run unit tests
-        run: npm run test
+        run: npm install
+
+      - name: Run tests
+        run: npm test
