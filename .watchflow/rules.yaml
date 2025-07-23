@@ -5,4 +5,4 @@
   severity: "high"
   event_types: ["push"]
   parameters:
-    pattern: "^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+\))?: .+"
+    pattern: '^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+\))?: .+'
