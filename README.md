@@ -1,6 +1,6 @@
 ![Unit Tests](https://github.com/junyap95/studyseed-admin-dashboard/actions/workflows/unit-tests.yml/badge.svg)
 
-This is a dashboard app for
+This is a dashboard app for Study
 
 ## Getting Started
 
