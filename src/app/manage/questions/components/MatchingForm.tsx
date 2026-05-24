@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -17,8 +17,15 @@ interface MatchingFormProps {
   question: MatchingType;
 }
 
+type PairArray = [string, string][];
+
 export const MatchingForm = ({ question }: MatchingFormProps) => {
   const { setEditingQuestion, isQuestionUpdating, handleUpdateQuestion } = useQuestions();
+
+  // Use array of pairs for stable editing - no object key deletion issues
+  const [pairs, setPairs] = useState<PairArray>(() =>
+    Object.entries(question.correct_answer || { "": "" }),
+  );
 
   const form = useForm<ZodMatchingSchema>({
     resolver: zodResolver(MatchingSchema),
@@ -32,12 +39,30 @@ export const MatchingForm = ({ question }: MatchingFormProps) => {
     },
   });
 
-  const correctAnswer = form.watch("correct_answer");
+  // Custom submit handler that converts pairs array back to object
+  const handleSubmit = (data: ZodMatchingSchema) => {
+    // Trim all pairs before submission
+    const trimmedPairs = pairs.map(([key, value]) => [key.trim(), value.trim()]);
 
-  const optionsArray = Object.keys(correctAnswer);
+    // Filter out empty keys and convert to object
+    const pairsToSubmit = trimmedPairs.filter(([key]) => key.length > 0);
+
+    if (pairsToSubmit.length === 0) {
+      form.setError("correct_answer", { message: "At least one pair is required" });
+      return;
+    }
+
+    const correctAnswer = Object.fromEntries(pairsToSubmit);
+
+    // Update form state with the finalized object
+    form.setValue("correct_answer", correctAnswer, { shouldDirty: true });
+
+    // Submit the updated form data
+    handleUpdateQuestion({ ...data, correct_answer: correctAnswer });
+  };
 
   return (
-    <form onSubmit={form.handleSubmit(handleUpdateQuestion)} className="space-y-8">
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
       <FieldGroup>
         {/* Question Text */}
         <Field>
@@ -49,32 +74,28 @@ export const MatchingForm = ({ question }: MatchingFormProps) => {
         <Field>
           <FieldLabel>Matching Pairs *</FieldLabel>
           <div className="space-y-3 mt-2">
-            {optionsArray.map((option, idx) => (
+            {pairs.map((pair, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 {/* Option input */}
                 <Input
-                  value={option}
+                  value={pair[0]}
                   onChange={(e) => {
-                    const newOption = e.target.value.trim();
-                    const current = { ...form.getValues("correct_answer") };
-                    const answer = current[option];
-                    delete current[option];
-                    current[newOption] = answer;
-                    form.setValue("correct_answer", current, { shouldDirty: true });
+                    const newPairs = [...pairs];
+                    newPairs[idx][0] = e.target.value;
+                    setPairs(newPairs);
                   }}
                   placeholder={`Type option ${idx + 1} text here`}
                   className="text-sm"
                 />
 
                 {/* Answer input */}
-                {optionsArray[idx].length >= 1 && (
+                {pair[0].length >= 1 && (
                   <Input
-                    value={correctAnswer[option]}
+                    value={pair[1]}
                     onChange={(e) => {
-                      const newAnswer = e.target.value.trim();
-                      form.setValue(`correct_answer.${option}`, newAnswer, {
-                        shouldDirty: true,
-                      });
+                      const newPairs = [...pairs];
+                      newPairs[idx][1] = e.target.value;
+                      setPairs(newPairs);
                     }}
                     placeholder={`Type answer ${idx + 1} text here`}
                     className="text-sm"
@@ -88,11 +109,9 @@ export const MatchingForm = ({ question }: MatchingFormProps) => {
                   size="sm"
                   className="text-xs text-red-600"
                   onClick={() => {
-                    const current = { ...form.getValues("correct_answer") };
-                    delete current[option];
-                    form.setValue("correct_answer", current, { shouldDirty: true });
+                    setPairs((prev) => prev.filter((_, i) => i !== idx));
                   }}
-                  disabled={optionsArray.length <= 1}
+                  disabled={pairs.length <= 1}
                 >
                   ✕
                 </Button>
@@ -100,15 +119,13 @@ export const MatchingForm = ({ question }: MatchingFormProps) => {
             ))}
 
             {/* Add new pair */}
-            {Object.keys(correctAnswer).length < 4 && (
+            {pairs.length < 4 && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const current = { ...form.getValues("correct_answer") };
-                  current[""] = ""; // placeholder pair
-                  form.setValue("correct_answer", current, { shouldDirty: true });
+                  setPairs((prev) => [...prev, ["", ""]]);
                 }}
               >
                 + Add Pair
