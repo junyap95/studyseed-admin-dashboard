@@ -48,7 +48,7 @@ export default function CreateUserForm() {
       last_name: "",
       enrolled_courses: [],
       userid: "",
-      courses: Object.values(Topic), // This is the topics field
+      courses: [], // This is the topics field
     },
     mode: "onChange",
   });
@@ -64,19 +64,25 @@ export default function CreateUserForm() {
   const enrolledCourses =
     (getValues("enrolled_courses") as { course: Course }[])?.map((c) => c.course) || [];
 
-  // Improved: Only disable a topic if ALL selected courses restrict it
+  // Determine if a topic should be disabled
   const isTopicDisabled = (topic: Topic): boolean => {
-    if (enrolledCourses.length === 0) return false;
-    if (topic === Topic.NUMERACY) {
-      // Disable only if ALL selected courses only allow LITERACY
-      return enrolledCourses.every((c) => coursesWithOnlyLiteracy.includes(c));
+    // If any enrolled course only allows LITERACY, disable NUMERACY
+    if (
+      topic === Topic.NUMERACY &&
+      enrolledCourses.every((c) => coursesWithOnlyLiteracy.includes(c))
+    ) {
+      return true;
     }
-    if (topic === Topic.LITERACY) {
-      // Disable only if ALL selected courses only allow NUMERACY
-      return enrolledCourses.every((c) => coursesWithOnlyNumeracy.includes(c));
+    // If any enrolled course only allows NUMERACY, disable LITERACY
+    if (
+      topic === Topic.LITERACY &&
+      enrolledCourses.every((c) => coursesWithOnlyNumeracy.includes(c))
+    ) {
+      return true;
     }
     return false;
   };
+
   const handleTopicCheckBoxChange = (topic: Topic, checked: boolean) => {
     const currentTopics = getValues("courses") as Topic[];
     if (checked) {
@@ -226,7 +232,6 @@ export default function CreateUserForm() {
             </Field>
           )}
         />
-
         <Controller
           name="last_name"
           control={control}
@@ -238,7 +243,6 @@ export default function CreateUserForm() {
             </Field>
           )}
         />
-
         <Controller
           name="userid"
           control={control}
@@ -262,39 +266,6 @@ export default function CreateUserForm() {
             </Field>
           )}
         />
-
-        <hr />
-        {/* Topic Checkbox Section */}
-        <Controller
-          name="courses"
-          control={control}
-          render={({ field, fieldState }) => (
-            <Field>
-              <FieldLabel>Topics</FieldLabel>
-              <div className="flex flex-col gap-2">
-                {topicValues.map((topic) => {
-                  const checked = (getValues("courses") as Topic[]).includes(topic);
-                  const disabled = isTopicDisabled(topic);
-                  return (
-                    <div key={topic} className="flex items-center gap-2">
-                      <Checkbox
-                        {...field}
-                        checked={checked}
-                        disabled={disabled}
-                        onCheckedChange={(checked) =>
-                          !disabled && handleTopicCheckBoxChange(topic, checked as boolean)
-                        }
-                      />
-                      <span className={`text-sm${disabled ? " text-gray-400" : ""}`}>{topic}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
         <hr />
 
         <div className="flex flex-col gap-2">
@@ -359,9 +330,40 @@ export default function CreateUserForm() {
             </div>
           </Dialog>
         </div>
-
+       
+        <hr />
+         {/* Topic Checkbox Section */}
+         <Controller
+          name="courses"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel>Topics</FieldLabel>
+              <div className="flex flex-col gap-2">
+                {topicValues.map((topic) => {
+                  const checked = (getValues("courses") as Topic[]).includes(topic);
+                  const disabled = isTopicDisabled(topic);
+                  return (
+                    <div key={topic} className="flex items-center gap-2">
+                      <Checkbox
+                        {...field}
+                        defaultChecked= {false}
+                        disabled={disabled}
+                        onCheckedChange={(checked) =>
+                          !disabled && handleTopicCheckBoxChange(topic, checked as boolean)
+                        }
+                      />
+                      <span className={`text-sm${disabled ? " text-gray-400" : ""}`}>{topic}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+   
         <hr className="m-3" />
-
         <Button aria-disabled={!isValid} type="submit" className="bg-studyseed-blue">
           {isSubmitting ? <Spinner /> : "Create New User"}
         </Button>
