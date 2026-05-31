@@ -11,7 +11,7 @@ const questionSubSchema = new mongoose.Schema(
   {
     strict: false, // ← allows different question types safely
     _id: false,
-  }
+  },
 );
 
 const moduleSchema = new mongoose.Schema(
@@ -27,7 +27,7 @@ const moduleSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 export const questionSchema = new mongoose.Schema(
@@ -37,7 +37,7 @@ export const questionSchema = new mongoose.Schema(
       default: [],
     },
   },
-  { strict: true }
+  { strict: true },
 );
 
 export const GLPNumeracyQuestions =
@@ -57,6 +57,11 @@ export const GESNumeracyQuestions =
 
 export const GESLiteracyQuestions =
   mongoose.models.GESLiteracy || mongoose.model("GESLiteracy", questionSchema, "ges_literacy");
+
+// MACKLE Literacy Only
+export const MACKLELiteracyQuestions =
+  mongoose.models.MACKLELiteracy ||
+  mongoose.model("MACKLELiteracy", questionSchema, "mackle_literacy");
 
 // Used for GET requests payload
 export type QuestionsPayload = {

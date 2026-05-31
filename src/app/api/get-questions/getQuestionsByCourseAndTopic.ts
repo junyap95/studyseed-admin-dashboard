@@ -9,6 +9,7 @@ import {
   QuestionsPayload,
   GESLiteracyQuestions,
   GESNumeracyQuestions,
+  MACKLELiteracyQuestions,
 } from "@/Models/QuestionModel";
 
 export const getQuestionsByCourseAndTopic = async (
@@ -46,6 +47,13 @@ export const getQuestionsByCourseAndTopic = async (
           return { error: `Invalid topic: ${topic}` };
       }
 
+    case Course.MACKLE:
+      switch (topic.toUpperCase()) {
+        case "LITERACY":
+          return (await MACKLELiteracyQuestions.findOne().lean()) as unknown as QuestionsPayload;
+        default:
+          return { modules: [] } as unknown as QuestionsPayload;
+      }
     default:
       return { error: `Invalid course: ${course}` };
   }
