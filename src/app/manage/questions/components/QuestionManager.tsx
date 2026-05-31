@@ -37,9 +37,11 @@ export default function QuestionManager() {
           }
         >
           <NativeSelectOption value="">Select A Course</NativeSelectOption>
-          <NativeSelectOption value={Course.GES}>GES</NativeSelectOption>
-          <NativeSelectOption value={Course.GES2}>GES2</NativeSelectOption>
-          <NativeSelectOption value={Course.GLP}>GLP</NativeSelectOption>
+          {Object.values(Course).map((course) => (
+            <NativeSelectOption key={course} value={course}>
+              {course}
+            </NativeSelectOption>
+          ))}
         </NativeSelect>
       </div>
 
@@ -79,8 +81,12 @@ export default function QuestionManager() {
 
                     {!isLoading && selectedTopic === topic && (
                       <div className="bg-gray-50 p-2">
+                        {questions.modules.length === 0 && (
+                          <span className="text-xs">No questions available</span>
+                        )}
                         {questions.modules?.map((module) => {
-                          const { module_id, questions } = module;
+                          const { module_id, questions: moduleQuestions } = module;
+
                           return (
                             <button
                               key={`${module_id}—${selectedModuleId}`}
@@ -99,7 +105,7 @@ export default function QuestionManager() {
                                     : "bg-gray-200 text-gray-600"
                                 }`}
                               >
-                                {questions.length}
+                                {moduleQuestions.length}
                               </span>
                             </button>
                           );

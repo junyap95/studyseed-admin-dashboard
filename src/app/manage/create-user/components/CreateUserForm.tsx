@@ -55,6 +55,28 @@ export default function CreateUserForm() {
 
   // Topic checkbox logic
   const topicValues = Object.values(Topic);
+
+  // Define which courses only allow which topics
+  const coursesWithOnlyLiteracy = [Course.MACKLE];
+  const coursesWithOnlyNumeracy: Course[] = []; // Add if needed in future
+
+  // Get selected/enrolled courses
+  const enrolledCourses =
+    (getValues("enrolled_courses") as { course: Course }[])?.map((c) => c.course) || [];
+
+  // Improved: Only disable a topic if ALL selected courses restrict it
+  const isTopicDisabled = (topic: Topic): boolean => {
+    if (enrolledCourses.length === 0) return false;
+    if (topic === Topic.NUMERACY) {
+      // Disable only if ALL selected courses only allow LITERACY
+      return enrolledCourses.every((c) => coursesWithOnlyLiteracy.includes(c));
+    }
+    if (topic === Topic.LITERACY) {
+      // Disable only if ALL selected courses only allow NUMERACY
+      return enrolledCourses.every((c) => coursesWithOnlyNumeracy.includes(c));
+    }
+    return false;
+  };
   const handleTopicCheckBoxChange = (topic: Topic, checked: boolean) => {
     const currentTopics = getValues("courses") as Topic[];
     if (checked) {
@@ -252,16 +274,18 @@ export default function CreateUserForm() {
               <div className="flex flex-col gap-2">
                 {topicValues.map((topic) => {
                   const checked = (getValues("courses") as Topic[]).includes(topic);
+                  const disabled = isTopicDisabled(topic);
                   return (
                     <div key={topic} className="flex items-center gap-2">
                       <Checkbox
                         {...field}
                         checked={checked}
+                        disabled={disabled}
                         onCheckedChange={(checked) =>
-                          handleTopicCheckBoxChange(topic, checked as boolean)
+                          !disabled && handleTopicCheckBoxChange(topic, checked as boolean)
                         }
                       />
-                      <span className="text-sm">{topic}</span>
+                      <span className={`text-sm${disabled ? " text-gray-400" : ""}`}>{topic}</span>
                     </div>
                   );
                 })}

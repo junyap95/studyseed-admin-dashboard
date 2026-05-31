@@ -3,6 +3,7 @@ import mongoose, { Schema } from "mongoose";
 import { Course } from "@/enums/courses.enum";
 import { ProgressModel } from "@/lib/types";
 import { Topic } from "@/enums/topics.enum";
+import { BASE_AVATAR } from "@/constants/constants";
 
 export interface IUser extends mongoose.Document {
   first_name: string;
@@ -12,6 +13,8 @@ export interface IUser extends mongoose.Document {
   // courses is more like Topics, but was named quite early on
   courses: Topic[];
   progress: Partial<ProgressModel>;
+  avatar?: string;
+  unlockedAvatars?: string[];
 }
 
 const UserSchema = new mongoose.Schema<IUser>(
@@ -37,6 +40,15 @@ const UserSchema = new mongoose.Schema<IUser>(
     progress: {
       type: Schema.Types.Mixed,
       required: true,
+    },
+    avatar: {
+      type: String,
+      required: false,
+      default: BASE_AVATAR,
+    },
+    unlockedAvatars: {
+      type: [String],
+      default: [],
     },
   },
   { minimize: false },
