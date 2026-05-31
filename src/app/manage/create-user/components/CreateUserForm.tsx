@@ -341,7 +341,6 @@ export default function CreateUserForm() {
               <FieldLabel>Topics</FieldLabel>
               <div className="flex flex-col gap-2">
                 {topicValues.map((topic) => {
-                  const checked = (getValues("courses") as Topic[]).includes(topic);
                   const disabled = isTopicDisabled(topic);
                   return (
                     <div key={topic} className="flex items-center gap-2">
