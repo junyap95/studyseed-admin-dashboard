@@ -2,14 +2,14 @@ import { serialize } from "cookie";
 import bcryptjs from "bcryptjs";
 import { NextResponse } from "next/server";
 
-import { adminSchema, ZodAdminSchema } from "@/lib/adminSchema";
+import { adminSchema, SafeAdminUser, ZodAdminSchema } from "@/lib/adminSchema";
 import { Admin } from "@/Models/Admin";
 import { connectToMongoDB } from "@/lib/mongodb";
 import { signAuthToken } from "@/lib/auth";
 
 export interface LoginResponse {
   message: string;
-  adminUser: ZodAdminSchema;
+  adminUser: SafeAdminUser;
 }
 
 export async function POST(request: Request) {
@@ -35,14 +35,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Incorrect password!" }, { status: 401 });
     }
 
-    // if login successful, generate an auth token for user
     const token = await signAuthToken({
       email: adminUser.email,
     });
 
+    const safeAdminUser: SafeAdminUser = {
+      email: adminUser.email,
+      username: adminUser.username,
+    };
+
     const response = NextResponse.json(
-      { message: `Login successful`, adminUser } as LoginResponse,
-      { status: 201 },
+      { message: `Login successful`, adminUser: safeAdminUser } satisfies LoginResponse,
+      { status: 200 },
     );
 
     response.headers.set(

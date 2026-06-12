@@ -1,23 +1,16 @@
 import { ZodUserSchema, userSchema } from "@/lib/adminSchema";
 import { NextResponse } from "next/server";
 import { connectToMongoDB } from "@/lib/mongodb";
-import { parse } from "cookie";
 import { IUser, User } from "@/Models/User";
+import { requireAuth } from "@/lib/requireAuth";
 
 export async function POST(request: Request) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   await connectToMongoDB();
 
   try {
-    const cookies = parse(request.headers.get("cookie") || "");
-    const existingToken = cookies.authToken;
-
-    if (!existingToken) {
-      return NextResponse.json(
-        { message: "Your session has timed out. Please log in again!" },
-        { status: 401 },
-      );
-    }
-
     const requestBody: ZodUserSchema = await request.json();
 
     const result = userSchema.safeParse(requestBody);
@@ -43,12 +36,10 @@ export async function POST(request: Request) {
     const newUser = new User(updatedReqBody);
     const savedResult = await newUser.save();
 
-    const response = NextResponse.json(
+    return NextResponse.json(
       { message: `User Created successfully`, savedResult },
       { status: 201 },
     );
-
-    return response;
   } catch (error) {
     return NextResponse.json({ error }, { status: 400 });
   }

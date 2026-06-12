@@ -3,12 +3,25 @@ import { NextResponse } from "next/server";
 import { connectToMongoDB } from "@/lib/mongodb";
 import { BASE_AVATAR } from "@/constants/constants";
 import { User } from "@/Models/User";
+import { requireAuth } from "@/lib/requireAuth";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
+  const migrationSecret = process.env.MIGRATION_SECRET;
+  if (!migrationSecret) {
+    return NextResponse.json({ message: "Migration is not configured" }, { status: 503 });
+  }
+
+  const providedSecret = request.headers.get("x-migration-secret");
+  if (providedSecret !== migrationSecret) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     await connectToMongoDB();
 
-    // Update all users to include avatar and unlockedAvatars fields
     const result = await User.updateMany(
       {},
       {

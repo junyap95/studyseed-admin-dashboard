@@ -1,22 +1,15 @@
 import { NextResponse } from "next/server";
-import { parse } from "cookie";
 import { connectToMongoDB } from "@/lib/mongodb";
 import { IUser, User } from "@/Models/User";
+import { requireAuth } from "@/lib/requireAuth";
 
 export async function DELETE(request: Request) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   await connectToMongoDB();
 
   try {
-    const cookies = parse(request.headers.get("cookie") || "");
-    const existingToken = cookies.authToken;
-
-    if (!existingToken) {
-      return NextResponse.json(
-        { message: "Your session has timed out. Please log in again!" },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     const userid = body?.userid;
 
@@ -34,7 +27,7 @@ export async function DELETE(request: Request) {
       {
         message: `User ${deletedUser.first_name} ${deletedUser.last_name} deleted successfully. Userid: ${userid}`,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json({ error }, { status: 400 });

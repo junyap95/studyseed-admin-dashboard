@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
-import { parse } from "cookie";
 
 import { User } from "@/Models/User";
 import { connectToMongoDB } from "@/lib/mongodb";
-import { verifyAuthToken } from "@/lib/auth";
+import { requireAuth } from "@/lib/requireAuth";
 
 export async function GET(request: Request) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   await connectToMongoDB();
 
-  const cookies = parse(request.headers.get("cookie") || "");
-  const token = cookies.authToken;
-
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { searchParams } = new URL(request.url); // how to get URL in route handlers
+  const { searchParams } = new URL(request.url);
   const searchTerm = searchParams.get("searchTerm") || "";
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -32,8 +29,6 @@ export async function GET(request: Request) {
       }
     : {};
 
-  const decoded = verifyAuthToken(token);
-
   const users = await User.find(searchFilter)
     .sort({ _id: -1 })
     .skip(skip)
@@ -44,5 +39,5 @@ export async function GET(request: Request) {
 
   const data = { users, totalUsers, pageNumber, limitNumber };
 
-  return NextResponse.json({ data, user: decoded });
+  return NextResponse.json({ data, user: auth.verified });
 }
