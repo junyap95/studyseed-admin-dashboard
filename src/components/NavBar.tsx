@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ZodAdminSchema } from "@/lib/adminSchema";
+import { SafeAdminUser } from "@/lib/adminSchema";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -48,7 +48,7 @@ export default function NavBar() {
   const router = useRouter();
   const pathName = usePathname();
   const { isAuthenticated, setIsAuthenticated, isLoading } = useAuth();
-  const [adminProfile] = useLocalStorage("admin-profile", {} as ZodAdminSchema, {
+  const [adminProfile] = useLocalStorage("admin-profile", {} as SafeAdminUser, {
     deserializer: (value) => JSON.parse(value),
   });
   const [isMounted, setIsMounted] = useState(false);

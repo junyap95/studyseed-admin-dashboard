@@ -2,7 +2,7 @@
 
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { adminSchema, ZodAdminSchema } from "@/lib/adminSchema";
+import { adminSchema, SafeAdminUser, ZodAdminSchema } from "@/lib/adminSchema";
 
 import { useAuth } from "@/context/AuthContext";
 import { LoginResponse } from "@/app/api/login/route";
@@ -16,7 +16,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 export default function Login() {
   const { setIsAuthenticated } = useAuth();
-  const [adminProfile, setAdminProfile] = useLocalStorage<ZodAdminSchema | null>(
+  const [adminProfile, setAdminProfile] = useLocalStorage<SafeAdminUser | null>(
     "admin-profile",
     null,
     {

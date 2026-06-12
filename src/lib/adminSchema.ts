@@ -28,3 +28,4 @@ export const userSchema = z.object({
 
 export type ZodUserSchema = z.infer<typeof userSchema>;
 export type ZodAdminSchema = z.infer<typeof adminSchema>;
+export type SafeAdminUser = Omit<ZodAdminSchema, "password">;

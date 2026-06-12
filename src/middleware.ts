@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { parse } from "cookie";
 import { jwtVerify } from "jose";
 import { DashboardPagePath } from "./enums/pagePaths.enum";
-import { secret, verifyAuthToken } from "./lib/auth";
+import { getSecret, verifyAuthToken } from "./lib/auth";
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -16,7 +16,7 @@ export default async function middleware(req: NextRequest) {
     }
 
     try {
-      await jwtVerify(token, secret);
+      await jwtVerify(token, getSecret());
       // logged in → redirect away from login
       return NextResponse.redirect(new URL(DashboardPagePath.MANAGE, req.url));
     } catch {
