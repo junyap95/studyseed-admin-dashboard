@@ -42,6 +42,10 @@ const dashboardPages = [
     pageName: "Manage Questions",
     href: DashboardPagePath.MANAGE_QUESTIONS,
   },
+  {
+    pageName: "Course Builder",
+    href: DashboardPagePath.MANAGE_COURSES,
+  },
 ];
 
 export default function NavBar() {

@@ -1,10 +1,9 @@
-import { Course } from "@/enums/courses.enum";
 import { ProgressModel } from "./types";
 
-export const initializeProgress = (courses: Course[]): Partial<ProgressModel> => {
-  const initialData = {} as Partial<ProgressModel>; // use type assertion here to tell TS that the empty object will eventually have the shape of ProgressModel
-  courses.forEach((course: Course) => {
-    initialData[course] = {
+export const initializeProgress = (courseCodes: string[]): Partial<ProgressModel> => {
+  const initialData: Partial<ProgressModel> = {};
+  courseCodes.forEach((courseCode: string) => {
+    initialData[courseCode] = {
       LITERACY: {},
       NUMERACY: {},
     };
@@ -17,7 +16,7 @@ export const generateRandomLetters = (length: number) => {
   let result = "";
   for (let i = 0; i < length; i++) {
     const randomIndex = Math.floor(Math.random() * characters.length);
-    result += characters[randomIndex];
+    result += characters.charAt(randomIndex);
   }
   return result;
 };

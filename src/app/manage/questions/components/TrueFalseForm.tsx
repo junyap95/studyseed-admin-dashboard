@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "@/components/ui/textarea";
 import { ZodTrueFalseSchema, TrueFalseSchema } from "@/lib/questionSchema";
 import { TrueFalseType } from "@/lib/questionTypes";
-import { useQuestions } from "@/context/QuestionsContext";
+import { useQuestionForm } from "@/context/QuestionFormContext";
 
 import { FormActionButtons } from "./FormActionButtons";
 import { Input } from "@/components/ui/input";
@@ -36,12 +36,12 @@ export function TrueFalseForm({ question }: TrueFalseFormProps) {
       image: question.image,
     },
   });
-  const { setEditingQuestion, handleUpdateQuestion, isQuestionUpdating } = useQuestions();
+  const { onSave, onCancel, isSaving, saveLabel } = useQuestionForm();
 
   const correctAnswer = watch("correct_answer");
 
   return (
-    <form onSubmit={handleSubmit(handleUpdateQuestion)} className="space-y-6 w-full">
+    <form onSubmit={handleSubmit(onSave)} className="space-y-6 w-full">
       {/* Question Number */}
       <Field>
         <FieldLabel>Question Number</FieldLabel>
@@ -126,8 +126,9 @@ export function TrueFalseForm({ question }: TrueFalseFormProps) {
       </Field>
 
       <FormActionButtons
-        isUpdating={isQuestionUpdating}
-        onCancel={() => setEditingQuestion(null)}
+        isSaving={isSaving}
+        saveLabel={saveLabel}
+        onCancel={onCancel}
       />
     </form>
   );

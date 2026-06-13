@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MSQSchema, ZodMSQSchema } from "@/lib/questionSchema";
 import { MSQtype } from "@/lib/questionTypes";
-import { useQuestions } from "@/context/QuestionsContext";
+import { useQuestionForm } from "@/context/QuestionFormContext";
 
 import { FormActionButtons } from "./FormActionButtons";
 
@@ -18,7 +18,7 @@ interface MSQFormProps {
 }
 
 export const MSQForm = ({ question }: MSQFormProps) => {
-  const { setEditingQuestion, isQuestionUpdating, handleUpdateQuestion } = useQuestions();
+  const { onSave, onCancel, isSaving, saveLabel } = useQuestionForm();
 
   const form = useForm<ZodMSQSchema>({
     resolver: zodResolver(MSQSchema),
@@ -54,7 +54,7 @@ export const MSQForm = ({ question }: MSQFormProps) => {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(handleUpdateQuestion)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
       <FieldGroup>
         {/* Question Number */}
         <Controller
@@ -188,8 +188,9 @@ export const MSQForm = ({ question }: MSQFormProps) => {
         />
       </FieldGroup>
       <FormActionButtons
-        isUpdating={isQuestionUpdating}
-        onCancel={() => setEditingQuestion(null)}
+        isSaving={isSaving}
+        saveLabel={saveLabel}
+        onCancel={onCancel}
       />
     </form>
   );

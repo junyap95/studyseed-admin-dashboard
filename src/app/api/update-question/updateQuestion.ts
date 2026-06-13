@@ -1,34 +1,5 @@
-import { Course } from "@/enums/courses.enum";
-import { Topic } from "@/enums/topics.enum";
-
+import { getQuestionCollection } from "@/lib/questionCollection";
 import { UpdateQuestionPayload } from "@/lib/types";
-
-import {
-  GES2LiteracyQuestions,
-  GES2NumeracyQuestions,
-  GESLiteracyQuestions,
-  GESNumeracyQuestions,
-  GLPLiteracyQuestions,
-  GLPNumeracyQuestions,
-  MACKLELiteracyQuestions,
-} from "@/Models/QuestionModel";
-
-const getCollection = (course: Course, topic: Topic) => {
-  if (course === Course.GES) {
-    return topic === Topic.NUMERACY ? GESNumeracyQuestions : GESLiteracyQuestions;
-  }
-  if (course === Course.GES2) {
-    return topic === Topic.NUMERACY ? GES2NumeracyQuestions : GES2LiteracyQuestions;
-  }
-  if (course === Course.GLP) {
-    return topic === Topic.NUMERACY ? GLPNumeracyQuestions : GLPLiteracyQuestions;
-  }
-  if (course === Course.MACKLE) {
-    if (topic === Topic.LITERACY) return MACKLELiteracyQuestions;
-    throw new Error("MACKLE only supports LITERACY topic");
-  }
-  throw new Error("Invalid course/topic");
-};
 
 export const updateQuestion = async ({
   course,
@@ -41,7 +12,7 @@ export const updateQuestion = async ({
     throw new Error("course and topic are required");
   }
 
-  const Collection = getCollection(course, topic);
+  const Collection = getQuestionCollection(course, topic);
 
   const setObject = Object.fromEntries(
     Object.entries(updates).map(([key, value]) => [`modules.$[u].questions.$[q].${key}`, value]),

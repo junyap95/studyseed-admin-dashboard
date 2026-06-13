@@ -8,12 +8,14 @@ import { MSQForm } from "./MSQForm";
 import { DndForm } from "./DnDForm";
 import { MatchingForm } from "./MatchingForm";
 import { TndForm } from "./TndForm";
+import { DummyForm } from "./DummyForm";
 
 interface QuestionEditorProps {
   question: Question;
+  title?: string;
 }
 
-export default function QuestionEditor({ question }: QuestionEditorProps) {
+export default function QuestionEditor({ question, title = "Edit Question" }: QuestionEditorProps) {
   if (!question) return null;
 
   const renderEditor = () => {
@@ -40,12 +42,7 @@ export default function QuestionEditor({ question }: QuestionEditorProps) {
         return <TndForm question={question} />;
 
       case "dummy":
-        return (
-          <div className="space-y-4">
-            <p className="text-gray-600">Dummy questions cannot be edited</p>
-            <Button variant="secondary">Close</Button>
-          </div>
-        );
+        return <DummyForm question={question} />;
 
       default:
         return (
@@ -60,7 +57,7 @@ export default function QuestionEditor({ question }: QuestionEditorProps) {
   return (
     <div className="w-full bg-white rounded-lg border-2 border-blue-500 p-6">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-bold text-blue-600">Edit Question</h3>
+        <h3 className="text-2xl font-bold text-blue-600">{title}</h3>
         <span className="px-3 py-1 text-xs font-medium bg-[#3380fc] text-white rounded-full">
           {question.question_style}
         </span>

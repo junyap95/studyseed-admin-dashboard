@@ -8,7 +8,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { DragAndDropSchema, ZodDragAndDropSchema } from "@/lib/questionSchema";
 import { DndType } from "@/lib/questionTypes";
-import { useQuestions } from "@/context/QuestionsContext";
+import { useQuestionForm } from "@/context/QuestionFormContext";
 
 import { FormActionButtons } from "./FormActionButtons";
 
@@ -17,7 +17,7 @@ interface DndFormProps {
 }
 
 export const DndForm = ({ question }: DndFormProps) => {
-  const { setEditingQuestion, isQuestionUpdating, handleUpdateQuestion } = useQuestions();
+  const { onSave, onCancel, isSaving, saveLabel } = useQuestionForm();
 
   const form = useForm<ZodDragAndDropSchema>({
     resolver: zodResolver(DragAndDropSchema),
@@ -39,7 +39,7 @@ export const DndForm = ({ question }: DndFormProps) => {
   });
 
   return (
-    <form onSubmit={form.handleSubmit(handleUpdateQuestion)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
       <FieldGroup>
         {/* Question Number */}
         <Field>
@@ -127,8 +127,9 @@ export const DndForm = ({ question }: DndFormProps) => {
       </Field>
 
       <FormActionButtons
-        isUpdating={isQuestionUpdating}
-        onCancel={() => setEditingQuestion(null)}
+        isSaving={isSaving}
+        saveLabel={saveLabel}
+        onCancel={onCancel}
       />
     </form>
   );
