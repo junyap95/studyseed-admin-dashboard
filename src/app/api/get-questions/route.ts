@@ -1,36 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parse } from "cookie";
 
 import { connectToMongoDB } from "@/lib/mongodb";
 import { getQuestionsByCourseAndTopic } from "./getQuestionsByCourseAndTopic";
-import { Topic } from "@/enums/topics.enum";
-import { Course } from "@/enums/courses.enum";
-import { verifyAuthToken } from "@/lib/auth";
+import { requireAuth } from "@/lib/requireAuth";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   await connectToMongoDB();
 
-  // Get query parameters from URL
   const searchParams = request.nextUrl.searchParams;
-  const topic = searchParams.get("topic") as Topic;
-  const course = searchParams.get("course") as Course;
+  const topic = searchParams.get("topic");
+  const course = searchParams.get("course");
 
-  // Validate query parameters
   if (!topic || !course) {
     return NextResponse.json({ error: "Missing topic or course parameter" }, { status: 400 });
   }
 
-  // Get auth token from cookies
-  const cookies = parse(request.headers.get("cookie") || "");
-  const token = cookies.authToken;
-
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
-    await verifyAuthToken(token);
-
     const gameQuestions = await getQuestionsByCourseAndTopic(course, topic);
 
     if (!gameQuestions) {

@@ -8,7 +8,7 @@ import { FillBlankType } from "@/lib/questionTypes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuestions } from "@/context/QuestionsContext";
+import { useQuestionForm } from "@/context/QuestionFormContext";
 import { FormActionButtons } from "./FormActionButtons";
 
 interface FillBlankFormProps {
@@ -37,7 +37,7 @@ export function FillBlankForm({ question }: FillBlankFormProps) {
       question_label: question.question_label,
     },
   });
-  const { setEditingQuestion, handleUpdateQuestion, isQuestionUpdating } = useQuestions();
+  const { onSave, onCancel, isSaving, saveLabel } = useQuestionForm();
 
   const answers = watch("correct_answer");
   const addAnswer = (answer: string) => {
@@ -53,7 +53,7 @@ export function FillBlankForm({ question }: FillBlankFormProps) {
   const capitalisation = watch("capitalisation");
 
   return (
-    <form onSubmit={handleSubmit(handleUpdateQuestion)} className="space-y-6 w-full">
+    <form onSubmit={handleSubmit(onSave)} className="space-y-6 w-full">
       {/* Question Number */}
       <div>
         <label className="block text-sm font-semibold mb-2 text-gray-700">Question Number</label>
@@ -179,8 +179,9 @@ export function FillBlankForm({ question }: FillBlankFormProps) {
       </div>
 
       <FormActionButtons
-        isUpdating={isQuestionUpdating}
-        onCancel={() => setEditingQuestion(null)}
+        isSaving={isSaving}
+        saveLabel={saveLabel}
+        onCancel={onCancel}
       />
     </form>
   );

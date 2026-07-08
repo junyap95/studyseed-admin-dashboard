@@ -53,14 +53,47 @@ export const DragAndDropSchema = BaseQuestionSchema.extend({
 // Matching Schema
 export const MatchingSchema = BaseQuestionSchema.extend({
   question_style: z.literal("matching"),
+  options: z
+    .array(z.string().trim().min(1, "Option cannot be empty"))
+    .min(1, { message: "At least one matching pair is required" }),
+  answers: z
+    .array(z.string().trim().min(1, "Answer cannot be empty"))
+    .min(1, { message: "At least one matching pair is required" }),
   correct_answer: z
     .record(
       z.string().trim().min(1, "Option cannot be empty"),
-      z.string().trim().min(1, "Answer cannot be empty")
+      z.string().trim().min(1, "Answer cannot be empty"),
     )
     .refine((val) => Object.keys(val).length > 0, {
       message: "At least one matching pair is required",
     }),
+}).superRefine((data, ctx) => {
+  const keys = Object.keys(data.correct_answer);
+
+  if (keys.length !== data.options.length || keys.length !== data.answers.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Options, answers, and correct_answer must have the same number of pairs",
+      path: ["correct_answer"],
+    });
+  }
+
+  keys.forEach((key, index) => {
+    if (data.options[index] !== key) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Options must match the matching pair keys",
+        path: ["options"],
+      });
+    }
+    if (data.correct_answer[key] !== data.answers[index]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Answers must match the matching pair values",
+        path: ["answers"],
+      });
+    }
+  });
 });
 
 // Fill in the Blank Schema

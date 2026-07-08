@@ -1,10 +1,8 @@
 import React from "react";
 import { Edit2, ChevronRight } from "lucide-react";
 
-import { Topic } from "@/enums/topics.enum";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { useQuestions } from "@/context/QuestionsContext";
-import { Course } from "@/enums/courses.enum";
+import { useQuestions, useSelectedCourseTopics } from "@/context/QuestionsContext";
 import QuestionRenderer from "./QuestionRenderer";
 import QuestionEditor from "./QuestionEditor";
 
@@ -18,11 +16,16 @@ export default function QuestionManager() {
     selectCourse,
     isLoading,
     questions,
+    courses,
+    coursesLoading,
     currentModule,
     editingQuestion,
     setEditingQuestion,
   } = useQuestions();
 
+  const courseTopics = useSelectedCourseTopics();
+
+  if (coursesLoading) return <div>Loading courses...</div>;
   if (isLoading) return <div>Loading</div>;
 
   return (
@@ -31,31 +34,30 @@ export default function QuestionManager() {
         <h2 className="text-2xl font-bold text-gray-800">Select a course</h2>
 
         <NativeSelect
-          value={selectedCourse}
+          value={selectedCourse ?? ""}
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-            selectCourse(e.target.value as Course)
+            selectCourse(e.target.value || undefined)
           }
         >
           <NativeSelectOption value="">Select A Course</NativeSelectOption>
-          {Object.values(Course).map((course) => (
-            <NativeSelectOption key={course} value={course}>
-              {course}
+          {courses.map((course) => (
+            <NativeSelectOption key={course.code} value={course.code}>
+              {course.displayName} ({course.code})
             </NativeSelectOption>
           ))}
         </NativeSelect>
       </div>
 
-      {/* Main Content */}
       <div className="flex overflow-hidden">
-        {/* Left Sidebar - Topics & Modules */}
-        {questions !== undefined && (
+        {questions !== undefined && selectedCourse && (
           <div className="flex-1 bg-white border-r overflow-y-auto">
             <div className="p-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Topics & Modules</h3>
-                {[Topic.LITERACY, Topic.NUMERACY].map((topic) => (
+                {courseTopics.map((topic) => (
                   <div key={topic} className="border rounded-lg overflow-hidden">
                     <button
+                      type="button"
                       onClick={() => {
                         if (selectedTopic === topic) {
                           selectTopic(undefined);
@@ -79,10 +81,10 @@ export default function QuestionManager() {
                       />
                     </button>
 
-                    {!isLoading && selectedTopic === topic && (
+                    {selectedTopic === topic && (
                       <div className="bg-gray-50 p-2">
                         {questions.modules.length === 0 && (
-                          <span className="text-xs">No questions available</span>
+                          <span className="text-xs">No modules available</span>
                         )}
                         {questions.modules?.map((module) => {
                           const { module_id, questions: moduleQuestions } = module;
@@ -90,6 +92,7 @@ export default function QuestionManager() {
                           return (
                             <button
                               key={`${module_id}—${selectedModuleId}`}
+                              type="button"
                               onClick={() => selectModule(module_id)}
                               className={`w-full text-left px-4 py-3 rounded-lg mb-1 transition flex items-center justify-between ${
                                 selectedModuleId === module_id
@@ -119,7 +122,6 @@ export default function QuestionManager() {
           </div>
         )}
 
-        {/* Right Content Area - Questions */}
         <div className="flex-2 space-y-4 overflow-y-auto py-5 px-5">
           {selectedModuleId &&
             currentModule &&
@@ -142,6 +144,7 @@ export default function QuestionManager() {
                         </span>
                       </div>
                       <button
+                        type="button"
                         onClick={() => setEditingQuestion(question)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                       >

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useQuestions } from "@/context/QuestionsContext";
+import { useQuestionForm } from "@/context/QuestionFormContext";
 import {
   TndCategoriesSchema,
   TndIndividualSchema,
@@ -32,7 +32,7 @@ export const TndForm = ({ question }: TndFormProps) => {
 };
 
 const TndIndividualForm = ({ question }: { question: TndIndividualQuestion }) => {
-  const { setEditingQuestion, isQuestionUpdating, handleUpdateQuestion } = useQuestions();
+  const { onSave, onCancel, isSaving, saveLabel } = useQuestionForm();
 
   const { watch, setValue, handleSubmit } = useForm<ZodTndIndividualSchema>({
     resolver: zodResolver(TndIndividualSchema),
@@ -92,7 +92,7 @@ const TndIndividualForm = ({ question }: { question: TndIndividualQuestion }) =>
   };
 
   return (
-    <form onSubmit={handleSubmit(handleUpdateQuestion)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSave)} className="space-y-4">
       {/* Correct Order */}
       <Field>
         <FieldLabel>Correct Order</FieldLabel>
@@ -166,15 +166,16 @@ const TndIndividualForm = ({ question }: { question: TndIndividualQuestion }) =>
       </Field>
 
       <FormActionButtons
-        isUpdating={isQuestionUpdating}
-        onCancel={() => setEditingQuestion(null)}
+        isSaving={isSaving}
+        saveLabel={saveLabel}
+        onCancel={onCancel}
       />
     </form>
   );
 };
 
 const TndCategoryForm = ({ question }: { question: TndCategoriesQuestion }) => {
-  const { setEditingQuestion, isQuestionUpdating, handleUpdateQuestion } = useQuestions();
+  const { onSave, onCancel, isSaving, saveLabel } = useQuestionForm();
   const { tndStyle } = question;
 
   const {
@@ -207,7 +208,7 @@ const TndCategoryForm = ({ question }: { question: TndCategoriesQuestion }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(handleUpdateQuestion)}>
+    <form onSubmit={handleSubmit(onSave)}>
       <p className="mb-3 px-3 py-1 text-xs font-medium bg-gray-100 rounded-full w-fit">
         {tndStyle} — place items in categories
       </p>
@@ -329,8 +330,9 @@ const TndCategoryForm = ({ question }: { question: TndCategoriesQuestion }) => {
       ))}
 
       <FormActionButtons
-        isUpdating={isQuestionUpdating}
-        onCancel={() => setEditingQuestion(null)}
+        isSaving={isSaving}
+        saveLabel={saveLabel}
+        onCancel={onCancel}
       />
     </form>
   );

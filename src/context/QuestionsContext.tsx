@@ -1,26 +1,36 @@
 "use client";
 
-import { createContext, useState, useCallback, useMemo, useContext } from "react";
+import {
+  createContext,
+  useState,
+  useCallback,
+  useMemo,
+  useContext,
+  type ReactNode,
+} from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { DashboardAPIPath } from "@/enums/apiPaths.enum";
-import { Course } from "@/enums/courses.enum";
 import { Topic } from "@/enums/topics.enum";
 import { Question } from "@/lib/questionTypes";
-import { QuestionsPayload, Module } from "@/Models/QuestionModel";
+import { QuestionsPayload, Module } from "@/lib/questionPayload";
 import { updateQuestionFn } from "@/lib/networkFunctions";
 import { UpdateQuestionPayload } from "@/lib/types";
 import { ZodQuestionSchema } from "@/lib/questionSchema";
+import { QuestionFormContext } from "@/context/QuestionFormContext";
+import { CourseRegistryItem } from "@/lib/types";
 
 export interface QuestionsContextType {
-  selectedTopic: Topic;
-  selectedCourse: Course | undefined;
+  selectedTopic: string;
+  selectedCourse: string | undefined;
   selectedModuleId: string | undefined;
   modules?: Record<string, Question[]>;
   isLoading: boolean;
   questions: QuestionsPayload | undefined;
-  selectTopic: (topic: Topic | undefined) => void;
-  selectCourse: (course: Course | undefined) => void;
+  courses: CourseRegistryItem[];
+  coursesLoading: boolean;
+  selectTopic: (topic: string | undefined) => void;
+  selectCourse: (course: string | undefined) => void;
   selectModule: (module: string | undefined) => void;
   currentModule: Module | undefined;
   editingQuestion: Question | null;
@@ -32,12 +42,15 @@ export interface QuestionsContextType {
 export const QuestionsContext = createContext<QuestionsContextType | undefined>(undefined);
 
 const getQuestions = async (
-  topic: Topic | undefined,
-  course: Course | undefined,
+  topic: string | undefined,
+  course: string | undefined,
 ): Promise<QuestionsPayload | undefined> => {
   if (!topic || !course) return undefined;
 
-  const response = await fetch(`${DashboardAPIPath.GET_QUESTIONS}?topic=${topic}&course=${course}`);
+  const response = await fetch(
+    `${DashboardAPIPath.GET_QUESTIONS}?topic=${topic}&course=${course}`,
+    { credentials: "include" },
+  );
 
   if (!response.ok) return undefined;
 
@@ -45,13 +58,26 @@ const getQuestions = async (
   return resObj.data;
 };
 
-export const QuestionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const fetchCourses = async (): Promise<CourseRegistryItem[]> => {
+  const response = await fetch(DashboardAPIPath.COURSES, { credentials: "include" });
+  if (!response.ok) return [];
+  const resObj = await response.json();
+  return resObj.data ?? [];
+};
+
+export const QuestionsProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
 
-  const [selectedTopic, setSelectedTopic] = useState<Topic>(Topic.LITERACY);
-  const [selectedCourse, setSelectedCourse] = useState<Course | undefined>(undefined);
+  const [selectedTopic, setSelectedTopic] = useState<string>(Topic.LITERACY);
+  const [selectedCourse, setSelectedCourse] = useState<string | undefined>(undefined);
   const [selectedModuleId, setSelectedModuleId] = useState<string | undefined>(undefined);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+
+  const { data: courses = [], isLoading: coursesLoading } = useQuery({
+    queryKey: ["courses"],
+    queryFn: fetchCourses,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const { data: questions, isLoading } = useQuery<QuestionsPayload | undefined>({
     queryKey: ["questions-by-course-topic", selectedTopic, selectedCourse],
@@ -71,38 +97,48 @@ export const QuestionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     },
   });
 
-  const handleUpdateQuestion = (updates: ZodQuestionSchema) => {
-    const updatePayload: UpdateQuestionPayload = {
-      course: selectedCourse,
-      topic: selectedTopic,
-      module_id: selectedModuleId,
-      question_number: updates.question_number,
-      updates: updates,
-    };
-    mutateAsync(updatePayload);
-  };
+  const handleUpdateQuestion = useCallback(
+    (updates: ZodQuestionSchema) => {
+      const updatePayload: UpdateQuestionPayload = {
+        course: selectedCourse,
+        topic: selectedTopic,
+        module_id: selectedModuleId,
+        question_number: updates.question_number,
+        updates,
+      };
+      mutateAsync(updatePayload);
+    },
+    [mutateAsync, selectedCourse, selectedModuleId, selectedTopic],
+  );
 
-  const selectTopic = useCallback((topic: Topic | undefined) => {
-    if (topic) setSelectedTopic(topic);
+  const selectTopic = useCallback((topic: string | undefined) => {
+    setSelectedTopic(topic ?? Topic.LITERACY);
+    setSelectedModuleId(undefined);
   }, []);
 
-  const selectCourse = useCallback((course: Course | undefined) => {
-    if (course) setSelectedCourse(course);
+  const selectCourse = useCallback((course: string | undefined) => {
+    setSelectedCourse(course);
+    setSelectedModuleId(undefined);
   }, []);
 
   const selectModule = useCallback((module: string | undefined) => {
-    if (module) setSelectedModuleId(module);
+    setSelectedModuleId(module);
   }, []);
 
   const currentModule = useMemo(() => {
-    if (!questions) return undefined;
-
-    if (selectedModuleId) {
-      return questions.modules.find((module) => module.module_id === selectedModuleId);
-    }
-
-    return undefined;
+    if (!questions || !selectedModuleId) return undefined;
+    return questions.modules.find((module) => module.module_id === selectedModuleId);
   }, [questions, selectedModuleId]);
+
+  const questionFormValue = useMemo(
+    () => ({
+      onSave: handleUpdateQuestion,
+      onCancel: () => setEditingQuestion(null),
+      isSaving: isQuestionUpdating,
+      saveLabel: "Save",
+    }),
+    [handleUpdateQuestion, isQuestionUpdating],
+  );
 
   return (
     <QuestionsContext.Provider
@@ -112,6 +148,8 @@ export const QuestionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         selectedModuleId,
         questions,
         isLoading,
+        courses,
+        coursesLoading,
         selectTopic,
         selectCourse,
         selectModule,
@@ -122,7 +160,9 @@ export const QuestionsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         handleUpdateQuestion,
       }}
     >
-      {children}
+      <QuestionFormContext.Provider value={questionFormValue}>
+        {children}
+      </QuestionFormContext.Provider>
     </QuestionsContext.Provider>
   );
 };
@@ -136,3 +176,9 @@ export const useQuestions = () => {
 
   return context;
 };
+
+export function useSelectedCourseTopics() {
+  const { courses, selectedCourse } = useQuestions();
+  const course = courses.find((c) => c.code === selectedCourse);
+  return course?.topics ?? [];
+}

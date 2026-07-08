@@ -3,14 +3,14 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "usehooks-ts";
 import { CircleX } from "lucide-react";
 
 import { userSchema, ZodUserSchema } from "@/lib/adminSchema";
 import { generateRandomLetters, initializeProgress } from "@/lib/helperFunctions";
 import { DashboardAPIPath } from "@/enums/apiPaths.enum";
-import { Course } from "@/enums/courses.enum";
+import { CourseRegistryItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -53,34 +53,28 @@ export default function CreateUserForm() {
     mode: "onChange",
   });
 
-  // Topic checkbox logic
+  const { data: availableCourses = [] } = useQuery<CourseRegistryItem[]>({
+    queryKey: ["courses"],
+    queryFn: async () => {
+      const res = await fetch(DashboardAPIPath.COURSES, { credentials: "include" });
+      if (!res.ok) return [];
+      const json = await res.json();
+      return json.data ?? [];
+    },
+  });
+
   const topicValues = Object.values(Topic);
 
-  // Define which courses only allow which topics
-  const coursesWithOnlyLiteracy = [Course.MACKLE];
-  const coursesWithOnlyNumeracy: Course[] = []; // Add if needed in future
-
-  // Get selected/enrolled courses
   const enrolledCourses =
-    (getValues("enrolled_courses") as { course: Course }[])?.map((c) => c.course) || [];
+    (getValues("enrolled_courses") as { course: string }[])?.map((c) => c.course) || [];
 
-  // Determine if a topic should be disabled
+  const enrolledCourseMetas = availableCourses.filter((c) => enrolledCourses.includes(c.code));
+
   const isTopicDisabled = (topic: Topic): boolean => {
-    // If any enrolled course only allows LITERACY, disable NUMERACY
-    if (
-      topic === Topic.NUMERACY &&
-      enrolledCourses.every((c) => coursesWithOnlyLiteracy.includes(c))
-    ) {
-      return true;
-    }
-    // If any enrolled course only allows NUMERACY, disable LITERACY
-    if (
-      topic === Topic.LITERACY &&
-      enrolledCourses.every((c) => coursesWithOnlyNumeracy.includes(c))
-    ) {
-      return true;
-    }
-    return false;
+    if (enrolledCourseMetas.length === 0) return false;
+
+    const topicUpper = topic.toUpperCase();
+    return !enrolledCourseMetas.some((course) => course.topics.includes(topicUpper));
   };
 
   const handleTopicCheckBoxChange = (topic: Topic, checked: boolean) => {
@@ -102,7 +96,7 @@ export default function CreateUserForm() {
 
   const [, setUserArr] = useLocalStorage<ZodUserSchema[]>("new-users", []);
 
-  const handleCheckBoxChange = (course: Course, checked: boolean) => {
+  const handleCheckBoxChange = (course: string, checked: boolean) => {
     if (checked) {
       append({ course });
     } else {
@@ -120,7 +114,7 @@ export default function CreateUserForm() {
       const reqBody = {
         ...formData,
         progress: initializeProgress(
-          formData.enrolled_courses.map((courseObj) => courseObj.course) as Course[],
+          formData.enrolled_courses.map((courseObj) => courseObj.course),
         ),
       };
 
@@ -284,18 +278,20 @@ export default function CreateUserForm() {
                   <h2>Available Courses</h2>
                 </FieldLabel>
 
-                {Object.values(Course).map((course) => {
-                  const isChecked = fields.some((f) => f.course === course);
+                {availableCourses.map((course) => {
+                  const isChecked = fields.some((f) => f.course === course.code);
 
                   return (
-                    <div key={course} className="flex items-center gap-2">
+                    <div key={course.code} className="flex items-center gap-2">
                       <Checkbox
                         checked={isChecked}
                         onCheckedChange={(checked) =>
-                          handleCheckBoxChange(course, checked as boolean)
+                          handleCheckBoxChange(course.code, checked as boolean)
                         }
                       />
-                      <span className="text-sm">{course}</span>
+                      <span className="text-sm">
+                        {course.displayName} ({course.code})
+                      </span>
                     </div>
                   );
                 })}

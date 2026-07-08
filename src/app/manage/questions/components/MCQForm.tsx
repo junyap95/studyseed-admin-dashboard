@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { MCQSchema, ZodMCQSchema } from "@/lib/questionSchema";
 import { MCQtype } from "@/lib/questionTypes";
-import { useQuestions } from "@/context/QuestionsContext";
+import { useQuestionForm } from "@/context/QuestionFormContext";
 
 import { FormActionButtons } from "./FormActionButtons";
 
@@ -18,7 +18,7 @@ interface MCQFormProps {
 }
 
 export const MCQForm = ({ question }: MCQFormProps) => {
-  const { setEditingQuestion, isQuestionUpdating, handleUpdateQuestion } = useQuestions();
+  const { onSave, onCancel, isSaving, saveLabel } = useQuestionForm();
 
   const form = useForm<ZodMCQSchema>({
     resolver: zodResolver(MCQSchema),
@@ -39,7 +39,7 @@ export const MCQForm = ({ question }: MCQFormProps) => {
   const currentCorrect = form.watch("correct_answer");
 
   return (
-    <form onSubmit={form.handleSubmit(handleUpdateQuestion)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSave)} className="space-y-4">
       <FieldGroup>
         {/* Question Number */}
         <Controller
@@ -169,10 +169,7 @@ export const MCQForm = ({ question }: MCQFormProps) => {
           )}
         />
       </FieldGroup>
-      <FormActionButtons
-        isUpdating={isQuestionUpdating}
-        onCancel={() => setEditingQuestion(null)}
-      />
+      <FormActionButtons isSaving={isSaving} saveLabel={saveLabel} onCancel={onCancel} />
     </form>
   );
 };
