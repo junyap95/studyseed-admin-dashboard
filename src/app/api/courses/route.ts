@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { connectToMongoDB } from "@/lib/mongodb";
-import { requireAuth } from "@/lib/requireAuth";
+
 import { createCourseSchema } from "@/lib/courseSchema";
 import { ensureLegacyCoursesSeeded } from "@/lib/courseRegistrySeed";
 import { CourseRegistry } from "@/Models/CourseRegistry";
 import { ensureQuestionCollection } from "@/lib/questionCollection";
+import { requireAuth } from "@/lib/requireAuth";
 
 export async function GET(request: Request) {
   const auth = await requireAuth(request);
